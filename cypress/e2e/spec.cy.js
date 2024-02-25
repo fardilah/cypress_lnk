@@ -17,21 +17,35 @@ const validate_all_questions = [validate_question_1, validate_question_2, valida
 
 //Variable
 const url = 'https://forms.office.com/pages/responsepage.aspx?id=is2XW8LLaEmfFhLKD9VwE9lpKmxdveNGmMWKETZvAWNUMzhBV1lYTlc1SDNRS00xRVg4OFhPODlQTS4u'
-// cy.get('input[class="-_W-62"]').eq(0).as('full_name')
-// const phone_number = 'input[class="-_W-62"]'.eq(1).as('phone_number')
-// const full_name = eq(0)
-// const phone_number = eq(1)
-// const product_service = 'span[data-automation-id="questionTitle"]'
-// const rate_our_services = 'div=[class="-hH-89"]'
 const review_date = 'input[aria-label="Date picker"]'
 const button_submit = 'button[data-automation-id="submitButton"]'
+const path = 'forms.office.com/pages/'
 
 //Value
 const value_name = 'Muhammad Fardilah Syalsabil Firdaus'
 const value_phone = '085106039807'
 const value_product = 'input[value="Affordable"]'
+const value_product_other = 'cheap but good'
 const value_rate = 'span[aria-label="4 Star"]'
 const value_date = 'button[aria-label="20, February, 2024"]'
+const other_answer = 'Ini adalah other answer'
+
+//Function
+function makeStringOfLength({min, max}) {
+
+  const length = Math.random() * (max - min + 1) + min
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  let result = '';
+
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+
+  return result;
+}
+
+const max_length = makeStringOfLength({min: 50, max:75})
 
 describe('validate form', () => {
   it('passes', () => {
@@ -40,14 +54,9 @@ describe('validate form', () => {
     numbers.forEach((number) => {
       cy.get('div[data-automation-id="questionItem"]').eq(number)
     })
-    validate_all_questions.forEach((validate_question) => {
-      cy.contains('span', validate_question)
-    })
     cy.get(button_submit)
   })
 })
-
-// describe('validate all input type', () => {})
 
 describe('validate questions', () => {
   it('passes', () => {
@@ -84,8 +93,20 @@ describe('validate mandatory field Full Name', () => {
     cy.get(value_date).click()
     cy.get(button_submit).click()
     cy.get('div[class="-sh-47"]').eq(0).scrollIntoView().should('be.visible')
-    // cy.get('div[data-automation-id="submitError"]').should('be.visible')
     cy.contains('span', error_question_1)
+  })
+})
+
+describe('Check validate max length field Full Name', () => {
+  it('passes', () => {
+    cy.visit(url)
+    cy.get('input[class="-_W-62"]').eq(0).type(max_length).invoke('val').should('have.length.lt', 4000)
+    cy.get('input[class="-_W-62"]').eq(1).type(value_phone)
+    cy.get(value_product).click()
+    cy.get(value_rate).click()
+    cy.get(review_date).click()
+    cy.get(value_date).click()
+    cy.get(button_submit).click()
   })
 })
 
@@ -103,7 +124,20 @@ describe('validate mandatory field Phone Number', () => {
   })
 })
 
-describe('validate mandatory field Product Service', () => {
+describe('Check validate max length field Phone Number', () => {
+  it('passes', () => {
+    cy.visit(url)
+    cy.get('input[class="-_W-62"]').eq(0).type(value_phone)
+    cy.get('input[class="-_W-62"]').eq(1).type(max_length).invoke('val').should('have.length.lt', 4000)
+    cy.get(value_product).click()
+    cy.get(value_rate).click()
+    cy.get(review_date).click()
+    cy.get(value_date).click()
+    cy.get(button_submit).click()
+  })
+})
+
+describe('validate mandatory field Product or Service', () => {
   it('passes', () => {
     cy.visit(url)
     cy.get('input[class="-_W-62"]').eq(0).type(value_name)
@@ -114,6 +148,19 @@ describe('validate mandatory field Product Service', () => {
     cy.get(button_submit).click()
     cy.get('div[class="-sh-47"]').eq(0).scrollIntoView().should('be.visible')
     cy.contains('span', error_question_3)
+  })
+})
+
+describe('Choose other in field Product or Service', () => {
+  it('passes', () => {
+    cy.visit(url)
+    cy.get('input[class="-_W-62"]').eq(0).type(value_name)
+    cy.get('input[class="-_W-62"]').eq(1).type(value_phone)
+    cy.get('input[class="-_W-62"]').eq(2).type(other_answer)
+    cy.get(value_rate).click()
+    cy.get(review_date).click()
+    cy.get(value_date).click()
+    cy.get(button_submit).click()
   })
 })
 
@@ -144,6 +191,18 @@ describe('validate mandatory field Review Date', () => {
   })
 })
 
+describe('validate invalid format date in field Review Date', () => {
+  it('passes', () => {
+    cy.visit(url)
+    cy.get('input[class="-_W-62"]').eq(0).type(value_name)
+    cy.get('input[class="-_W-62"]').eq(1).type(value_phone)
+    cy.get(value_product).click()
+    cy.get(value_rate).click()
+    cy.get('input[id="DatePicker0-label"]').dblclick().type('asdasd')
+    cy.get('div[class="-eP-115"]').should('be.visible')
+  })
+})
+
 describe('full submit', () => {
   it('passes', () => {
     cy.visit(url)
@@ -154,7 +213,6 @@ describe('full submit', () => {
     cy.get(review_date).click()
     cy.get(value_date).click()
     cy.get(button_submit).click()
-    // cy.contains('Your response has been successfully recorded.')
     cy.contains('Submit another response')
   })
 })
